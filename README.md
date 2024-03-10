@@ -1,1 +1,3 @@
-# rec_vnet_quality
+# RECONSTRUCTION VNET FOR DATA QUALITY - README
+
+Under development.
