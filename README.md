@@ -10,4 +10,4 @@ An example of an original MRI frame and its bad quality transformation:
 
 <img src="https://github.com/fabibombo/rec_vnet_quality/blob/main/pictures/bad_quality_example.png?raw=true" alt="Example Preview" width="200">
 
-Currently under development. The training notebook will be replaced by a training scripts and transforms_bq.py is under revision.
+Currently under development. The training notebook will be replaced by a training script and transforms_bq.py is under revision.
