@@ -1,0 +1,10 @@
+# ignore ALL .log files
+*.log
+*tests.ipynb
+
+# ignore ALL files in ANY directory named temp
+temp/ 
+models/
+results/
+__pycache__/
+.ipynb_checkpoints/
