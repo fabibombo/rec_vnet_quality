@@ -184,7 +184,7 @@ class Rec_Dataset(Dataset):
 
             image = torch.stack(transformed_frames, dim=-1)
 
-        bq_state = np.random.get_state()
+        #bq_state = np.random.get_state()
         transformed_frames = []
 
         # TODO: inhomogenities for all volume not per frame
@@ -245,16 +245,13 @@ class Rec_Dataset(Dataset):
 
         # Z-score normalization
         if self.normalize:
-            mean = np.mean(image.numpy(), axis=(0,1,2), keepdims=True)
-            std = np.std(image.numpy(), axis=(0,1,2), keepdims=True)
-            image = (image.numpy() - mean) / (std)
-            
-            mean = np.mean(bq_image.numpy(), axis=(0,1,2), keepdims=True)
-            std = np.std(bq_image.numpy(), axis=(0,1,2), keepdims=True)
-            bq_image = (bq_image.numpy() - mean) / (std)
+            mean = torch.mean(image, axis=(0,1,2), keepdims=True)
+            std = torch.std(image, axis=(0,1,2), keepdims=True)
+            image = (image - mean) / (std)
 
-            image = torch.from_numpy(image)
-            bq_image = torch.from_numpy(bq_image)
+            mean = torch.mean(bq_image, axis=(0,1,2), keepdims=True)
+            std = torch.std(bq_image, axis=(0,1,2), keepdims=True)
+            bq_image = (bq_image - mean) / (std)
         
         return bq_image.double(), image.double()
 
