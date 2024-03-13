@@ -2,6 +2,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage import zoom
 from scipy.interpolate import RegularGridInterpolator
+from scipy.ndimage import convolve
 
 ### INHOMOGEINITIES ###
 def simulate_inhomogeneities(slice, max_artifact_px_radius=64, num_inhomogeneities=1):
@@ -27,7 +28,7 @@ def simulate_inhomogeneities(slice, max_artifact_px_radius=64, num_inhomogeneiti
             pick_center = False
     
         # Ellipse area of inhomogeneity
-        brightness_factor = np.random.uniform(low=1.2, high=3.5, size=1)
+        brightness_factor = np.random.uniform(low=1.5, high=6, size=1)
 
         if np.random.rand() < 0.5:
             brightness_factor = 1/brightness_factor
@@ -75,12 +76,12 @@ def simulate_blurring_ghosting(slice, blur_strength=1):
     Simulate blurring or ghosting effects by convolving the MRI volume with a blurring kernel.
     
     Parameters:
-        mri_volume (ndarray): 3D numpy array representing the MRI volume.
+        slice (ndarray): 2D numpy array representing the MRI frame.
         kernel_size (int): Size of the blurring kernel.
         blur_strength (float): Strength of the blurring effect.
     
     Returns:
-        ndarray: MRI volume with simulated blurring or ghosting effects.
+        ndarray: MRI frame with simulated blurring or ghosting effects.
         
     """
 
@@ -100,28 +101,29 @@ def simulate_blurring_ghosting(slice, blur_strength=1):
 
 ### ALISING ###
 # To simulate undersampling
-def simulate_aliasing(mri_volume, undersample_factor=2, interpolation='nearest'):
+def simulate_aliasing(mri_image, undersample_factor=2, interpolation='nearest'):
     """
     Simulate aliasing effects by downsampling and then upsampling the MRI volume.
     
     Parameters:
-        mri_volume (ndarray): 3D numpy array representing the MRI volume.
+        mri_image (ndarray): 2D numpy array representing the MRI frame.
         undersample_factor (int): Factor by which to downscale the volume.
         interpolation (str): Interpolation method to use during upsampling.
             Options: 'nearest', 'linear', 'cubic'
     
     Returns:
-        ndarray: MRI volume with simulated aliasing effects.
+        ndarray: MRI frame with simulated aliasing effects.
     """
     undersample_factor = np.random.uniform(low=1, high=3)
+    undersample_factor = np.round(undersample_factor, decimals=1)
     
     # Downsample the volume
-    downsampled_volume = zoom(mri_volume, 1/undersample_factor, order=1)
+    downsampled_volume = zoom(mri_image, 1/undersample_factor, order=1)
     
-    # Upsample the downsampled volume
-    simulated_volume = zoom(downsampled_volume, undersample_factor, order=1, mode='wrap', prefilter=False)
-    
-    return simulated_volume
+    # Upsample the downsampled volume to original size
+    upsampled_volume = zoom(downsampled_volume, undersample_factor, order=1)
+
+    return upsampled_volume
 
 
 ### GRADIENT NONLINEARITY ###
@@ -131,11 +133,10 @@ def simulate_gradient_nonlinearity(slice):
     Simulate gradient nonlinearity effects by applying spatially varying deformations to the MRI volume.
     
     Parameters:
-        mri_volume (ndarray): 3D numpy array representing the MRI volume.
-        distortion_factor (float): Factor controlling the strength of the distortion.
+        slice (ndarray): 2D numpy array representing the MRI frame.
     
     Returns:
-        ndarray: MRI volume with simulated gradient nonlinearity effects.
+        ndarray: MRI frame with simulated gradient nonlinearity effects.
     """
 
     # it could be done to 3d if we want to
@@ -182,35 +183,35 @@ def simulate_partial_volume_effect(img, sigma=1.0):
 
 
 ### 3D GHOSTING ###
-def simulate_ghosting_3d(mri_volume, ghosting_factor=0.12, p=0.33):
-    """
-    Simulate ghosting artifacts by introducing duplicated images shifted along the phase-encoding direction.
+# def simulate_ghosting_3d(mri_volume, ghosting_factor=0.12, p=0.33):
+#     """
+#     Simulate ghosting artifacts by introducing duplicated images shifted along the phase-encoding direction.
     
-    Parameters:
-        mri_volume (ndarray): 3D numpy array representing the MRI volume.
-        ghosting_factor (float): Factor controlling the strength of the ghosting artifacts.
+#     Parameters:
+#         mri_volume (ndarray): 3D numpy array representing the MRI volume.
+#         ghosting_factor (float): Factor controlling the strength of the ghosting artifacts.
     
-    Returns:
-        ndarray: MRI volume with simulated ghosting artifacts.
-    """
-    ghosting_shifts = np.random.uniform(low=0.1, high=0.2)
-    ghosting_intensity = np.random.uniform(low=0.05, high=0.5)
+#     Returns:
+#         ndarray: MRI volume with simulated ghosting artifacts.
+#     """
+#     ghosting_shifts = np.random.uniform(low=0.1, high=0.2)
+#     ghosting_intensity = np.random.uniform(low=0.05, high=0.5)
     
-    # Determine the number of shifted copies
-    num_shifts = int(ghosting_shifts * mri_volume.shape[2])
+#     # Determine the number of shifted copies
+#     num_shifts = int(ghosting_shifts * mri_volume.shape[2])
     
-    # Generate shifted copies
-    ghosted_volume = np.zeros_like(mri_volume)
-    for shift in range(1, num_shifts + 1):
-        ghosted_volume[:,:,:-shift] += ghosting_intensity*mri_volume[:,:,shift:]
-    # Combine with the original volume
-    ghosted_volume += mri_volume
+#     # Generate shifted copies
+#     ghosted_volume = np.zeros_like(mri_volume)
+#     for shift in range(1, num_shifts + 1):
+#         ghosted_volume[:,:,:-shift] += ghosting_intensity*mri_volume[:,:,shift:]
+#     # Combine with the original volume
+#     ghosted_volume += mri_volume
 
-    for idx in range(mri_volume.shape[2]):
-        if np.random.uniform() > p:
-            ghosted_volume[:,:,idx] = mri_volume[:,:,idx]
+#     for idx in range(mri_volume.shape[2]):
+#         if np.random.uniform() > p:
+#             ghosted_volume[:,:,idx] = mri_volume[:,:,idx]
     
-    return ghosted_volume
+#     return ghosted_volume
 
 ### 2D GHOSTING ###
 def simulate_axis_ghosting(mri_volume, grid_value=13, ratio=2):
@@ -274,5 +275,3 @@ def add_gaussian_noise(image, mean_factor=0.5, std_factor=0.1):
     noisy_img = image + noise
 
     return noisy_img
-
-

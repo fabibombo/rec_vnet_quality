@@ -195,24 +195,25 @@ class UpTransition(nn.Module):
 class OutputTransition(nn.Module):
     def __init__(self, inChans, elu):
         super(OutputTransition, self).__init__()
-        self.conv1 = nn.Conv3d(inChans, 2, kernel_size=5, padding=2)
-        self.bn1 = ContInstanceNorm3d(2)
-        self.conv2 = nn.Conv3d(2, 2, kernel_size=1)
-        self.relu1 = ELUCons(elu, 2)
+        self.conv1 = nn.Conv3d(inChans, 1, kernel_size=5, padding=2)
+        self.bn1 = ContInstanceNorm3d(1)
+        self.conv2 = nn.Conv3d(1, 1, kernel_size=1)
+        self.relu1 = ELUCons(elu, 1)
 
     def forward(self, x):
-        # convolve 32 down to 2 channels
+        # convolve 32 down to 1 channel
         out = self.relu1(self.bn1(self.conv1(x)))
         out = self.conv2(out)
-        
+        #out = self.relu1(self.conv2(out))
+
         # make channels the last axis
         out = out.permute(0, 2, 3, 4, 1).contiguous()
-        
+
         # flatten
-        out = out.view(out.numel() // 2, 2)        
-        
+        out = out.view(out.numel() // 1, 1)
+
         # treat channel 0 as the predicted output 
-        # out = out[:,0]
+        out = out[:,0]
         return out
 
         
@@ -229,6 +230,7 @@ class VNetRec(nn.Module):
         self.up_tr64 = UpTransition(split_ch*8, split_ch*4, 1, elu, se)
         self.up_tr32 = UpTransition(split_ch*4, split_ch*2, 1, elu, se)
         self.out_tr = OutputTransition(split_ch*2, elu)
+        self.double()
         
     # The network topology as described in the diagram in the VNet paper with 16 split channels
     # def __init__(self):
