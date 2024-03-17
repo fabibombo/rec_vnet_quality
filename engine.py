@@ -171,15 +171,15 @@ def train(
 
         results["epoch"].append(epoch)
         results["train_loss"].append(train_results["loss"])
-        results["train_bcloss"].append(train_results["mae"])
+        results["train_mae"].append(train_results["mae"])
         results["test_loss"].append(test_results["loss"])
-        results["test_bcloss"].append(test_results["mae"])
+        results["test_mae"].append(test_results["mae"])
 
         write_results(results, results_path +"results_" + model.name + ".csv")
 
         if min_test_metric is None:
             min_test_metric = test_results["mae"]
-        elif epoch > 20 and test_results["mae"] > min_test_metric:
+        elif epoch > 10 and test_results["mae"] > min_test_metric:
             min_test_metric = test_results["mae"]
             utils.save_model(model=model,
                            target_dir=models_path,

@@ -59,17 +59,10 @@ def plot_all_frames(image, bq_image, model=None):
 
     # if model is not None:
     #     num_rows = 3
-    #     predictions = prediction_model(image.unsqueeze(dim=0))
-
-    #     if nll:
-    #         predictions = F.softmax(predictions, dim=1)
-    #         predictions = predictions[:,1]
-    #     else:
-    #         predictions = predictions[:,1]
-            
+    #     predictions = prediction_model(bq_image.unsqueeze(dim=0))
     #     predictions = predictions.view(mask.unsqueeze(dim=0).shape)
     #     predictions = predictions >= threshold
-    #     predictions = predictions.squeeze(dim=0).cpu().detach().numpy()
+    #     predictions = predictions.cpu().detach().numpy()
 
     fig, axes = plt.subplots(
         num_rows, num_frames, figsize=(3 * num_frames, 3 * num_rows)
